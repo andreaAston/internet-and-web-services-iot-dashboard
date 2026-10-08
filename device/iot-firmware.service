@@ -1,0 +1,19 @@
+[Unit]
+Description=Smart Access Monitor Raspberry Pi Firmware
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/Iot_firmware
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/pi/rfid-venv/bin/python /home/pi/Iot_firmware/main.py
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

@@ -408,9 +408,11 @@ def main():
     api = ApiClient()
     try:
         # ===== STEP 1: ENROLMENT ====================================================
-        # Run once to store each person's card ID + PIN in the database.
-        # When everyone is registered, COMMENT OUT the next line.
-        run_enrolment(hw, api)
+        # Enrollment needs an interactive terminal; systemd starts normal operation.
+        if sys.stdin.isatty():
+            run_enrolment(hw, api)
+        else:
+            log.info("No interactive terminal; skipping enrollment")
         # ============================================================================
 
         # ===== STEP 2: NORMAL OPERATION =============================================

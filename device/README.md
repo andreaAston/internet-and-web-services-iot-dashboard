@@ -27,6 +27,7 @@ not a set of test scripts.
 | `requirements.txt` | Python packages |
 | `.env.example` | Copy to `.env` and fill in. Never commit `.env` |
 | `.gitignore` | Keeps `.env`, photos and runtime files out of GitHub |
+| `iot-firmware.service` | systemd unit for starting firmware at boot |
 
 ## Pins (BCM numbering, from your test scripts)
 
@@ -112,8 +113,10 @@ database. Press Enter at the name prompt to finish.
 The admin credentials must exist in the same database used by the Render service. Use the dashboard admin username and password created by `npm run setup`; a local-only admin account is not automatically copied to Render. If the first Pi login times out while Render is waking, open the Render `/login` page in a browser, wait for it to load, then retry enrollment. The Pi request timeout is four seconds.
 
 **When everyone is registered, open `main.py`, find `run_enrolment(hw, api)` in `main()`
-and comment it out** (put a `#` in front). From then on the firmware starts directly in
-normal operation.
+Enrollment prompts only run when `main.py` is started from an interactive terminal. A
+systemd boot service has no terminal, so it skips enrollment and enters normal operation.
+To enroll someone later, stop the service and run `python main.py` manually in the Pi
+terminal; start the service again after enrollment.
 
 ### Step 2 - normal operation
 
@@ -165,6 +168,42 @@ when it should be off), `MQ3_ACTIVE_LOW`, `DHT_TYPE` (DHT22 or DHT11), `FAN_ON_T
 `FAN_ON_HUMIDITY`, `MAX_FAILS`, `LOCKOUT_S`, `AUTO_RELOCK_S`, `SNAPSHOT_ON_GRANTED`.
 
 The log is also written to `device.log`.
+
+## Start automatically at boot
+
+The included `iot-firmware.service` expects the Pi user `pi`, firmware directory
+`/home/pi/Iot_firmware`, and virtual environment `/home/pi/rfid-venv`. If your paths or
+username differ, edit those values in the unit file before installing it. Copy updated
+firmware and the unit file from PowerShell at the project root:
+
+```powershell
+scp .\device\main.py .\device\hardware.py .\device\iot-firmware.service pi@<PI_LAN_IP>:~/Iot_firmware/
+```
+
+On the Pi, install and enable the service:
+
+```bash
+sudo install -m 644 ~/Iot_firmware/iot-firmware.service /etc/systemd/system/iot-firmware.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now iot-firmware.service
+sudo systemctl status iot-firmware.service --no-pager
+```
+
+`enable` starts the firmware now and again after future boots. Check live logs with
+`journalctl -u iot-firmware.service -f`; use Ctrl+C to leave the log view. Stop or restart
+the firmware with `sudo systemctl stop iot-firmware.service` or
+`sudo systemctl restart iot-firmware.service`. A manual stop does not disable boot startup.
+
+To enroll another person, stop the service, run the firmware interactively, then start
+the service again:
+
+```bash
+sudo systemctl stop iot-firmware.service
+cd ~/Iot_firmware
+source ~/rfid-venv/bin/activate
+python main.py
+sudo systemctl start iot-firmware.service
+```
 
 ## Copy updated firmware from Windows
 

@@ -86,6 +86,7 @@ DEVICE_UID=main-entrance-pi
 ```
 
 The Pi sends telemetry every five seconds and sends camera images to the same HTTPS service. The device key authenticates Pi write requests. After setup, start the firmware with `python main.py` from the Pi firmware folder. See [device/README.md](device/README.md) for installation, enrollment, file transfer, and sensor fault behavior.
+The Pi sends telemetry every five seconds and sends camera images to the same HTTPS service. The device key authenticates Pi write requests. Run `python main.py` manually for interactive enrollment; for normal use, install the included systemd service to start firmware automatically at boot. See [device/README.md](device/README.md) for installation, enrollment, boot service, file transfer, and sensor fault behavior.
 
 For a direct file transfer, the PC and Pi must be able to reach each other over the same LAN (or a configured VPN). From PowerShell at the repository root:
 
