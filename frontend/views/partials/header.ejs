@@ -1,0 +1,17 @@
+<header class="topbar">
+  <a class="brand brand-small" href="/rooms" aria-label="Smart Access Monitor room selection">
+    <span class="brand-mark" aria-hidden="true">▣</span>
+    <span>Smart Access Monitor</span>
+  </a>
+  <div class="topbar-room">
+    <strong><%= room %></strong>
+    <p id="device-message" role="status" aria-live="polite">Connecting to device…</p>
+  </div>
+  <a class="switch-room" href="/rooms"><span aria-hidden="true">↔</span> Switch Room</a>
+  <span class="online-indicator" id="device-indicator"><i></i><span id="device-status">Checking device</span></span>
+  <div class="topbar-right">
+    <time id="current-time" aria-label="Current time"></time>
+    <a class="admin-link" href="/rooms"><span aria-hidden="true">♟</span><%= admin.username %><span aria-hidden="true">⌄</span></a>
+    <a class="logout-link" href="/logout">Log out</a>
+  </div>
+</header>

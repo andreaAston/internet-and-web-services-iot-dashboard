@@ -1,0 +1,1160 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Smart Access Monitor API",
+    "version": "1.0.0",
+    "description": "JWT login for dashboard reads; per-device API key for Pi writes. All timestamps are server-generated. Import this file into Swagger Editor or Postman. Cookies are also accepted for dashboard reads."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "deviceKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "smart_access_token"
+      }
+    }
+  },
+  "paths": {
+    "/api/login": {
+      "post": {
+        "summary": "Log in (also sets an HTTP-only cookie; token expires in 8 hours)",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "token": "<JWT>"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "username": "admin",
+                "password": "<your-password>"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/telemetry": {
+      "post": {
+        "summary": "Store one complete sensor reading; update online time and environmental alerts",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Telemetry stored"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "deviceKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "device_uid",
+                  "temperature",
+                  "humidity",
+                  "gas_present",
+                  "fan_on"
+                ],
+                "properties": {
+                  "device_uid": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "temperature": {
+                    "type": "number",
+                    "nullable": true,
+                    "minimum": -273.15,
+                    "maximum": 1000
+                  },
+                  "humidity": {
+                    "type": "number",
+                    "nullable": true,
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "gas_present": {
+                    "type": "boolean",
+                    "nullable": true
+                  },
+                  "fan_on": {
+                    "type": "boolean",
+                    "nullable": true
+                  }
+                }
+              },
+              "example": {
+                "device_uid": "main-entrance-pi",
+                "temperature": 24.6,
+                "humidity": 58,
+                "gas_present": false,
+                "fan_on": false
+              }
+            }
+          }
+        },
+        "description": "All four reading fields are required. Use null for an unavailable sensor or unknown fan state; omitted fields and invalid types are rejected. Null readings do not clear existing alerts. A valid packet updates device last_seen even if all readings are null. Device online indicates communication, not sensor health."
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "summary": "Current readings (aliases of the same handler)",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "temperature": 24.6,
+                  "humidity": 58,
+                  "gas_status": "safe",
+                  "fan_status": "off",
+                  "device_online": true,
+                  "last_seen": "2026-10-03T06:00:00Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown device",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Device not found"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_uid",
+            "in": "query",
+            "description": "Filter by registered device UID. Omit to query all devices (latest device for current KPI).",
+            "schema": {
+              "type": "string"
+            },
+            "example": "main-entrance-pi"
+          }
+        ],
+        "description": "Online means a valid reading was received within 2 minutes. Before first telemetry, readings/status strings and last_seen are null, online is false."
+      }
+    },
+    "/api/dashboard/current": {
+      "get": {
+        "summary": "Current readings (aliases of the same handler)",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "temperature": 24.6,
+                  "humidity": 58,
+                  "gas_status": "safe",
+                  "fan_status": "off",
+                  "device_online": true,
+                  "last_seen": "2026-10-03T06:00:00Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown device",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Device not found"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_uid",
+            "in": "query",
+            "description": "Filter by registered device UID. Omit to query all devices (latest device for current KPI).",
+            "schema": {
+              "type": "string"
+            },
+            "example": "main-entrance-pi"
+          }
+        ],
+        "description": "Online means a valid reading was received within 2 minutes. Before first telemetry, readings/status strings and last_seen are null, online is false."
+      }
+    },
+    "/api/devices": {
+      "get": {
+        "summary": "List registered devices without credential hashes",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": 1,
+                    "device_uid": "main-entrance-pi",
+                    "name": "Main entrance Raspberry Pi",
+                    "location": null,
+                    "last_seen": "2026-10-03T06:00:00Z",
+                    "device_online": true
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": []
+      }
+    },
+    "/api/readings": {
+      "get": {
+        "summary": "Latest N temperature/humidity readings, returned oldest first",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "temperature": 24.6,
+                    "humidity": 58,
+                    "recorded_at": "2026-10-03T06:00:00Z",
+                    "device_uid": "main-entrance-pi"
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_uid",
+            "in": "query",
+            "description": "Filter by registered device UID. Omit to query all devices (latest device for current KPI).",
+            "schema": {
+              "type": "string"
+            },
+            "example": "main-entrance-pi"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 50
+            },
+            "example": 50
+          }
+        ]
+      }
+    },
+    "/api/device/verify-access": {
+      "post": {
+        "summary": "Verify the enrolled RFID card and PIN together; either may be entered first on the Pi",
+        "security": [
+          {
+            "deviceKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["device_uid", "card_uid", "pin"],
+                "properties": {
+                  "device_uid": {"type": "string", "maxLength": 100},
+                  "card_uid": {"type": "string", "maxLength": 64},
+                  "pin": {"type": "string", "pattern": "^[0-9]{4,8}$"}
+                }
+              },
+              "example": {
+                "device_uid": "main-entrance-pi",
+                "card_uid": "<card UID>",
+                "pin": "1234"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pair checked; invalid factors receive a generic denial",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "granted": {"value": {"granted": true, "reason": "authorized", "user_id": 1, "card_id": 1, "name": "Example User"}},
+                  "denied": {"value": {"granted": false, "reason": "invalid_credentials"}}
+                }
+              }
+            }
+          },
+          "400": {"description": "Invalid request body"},
+          "401": {"description": "Missing or invalid device API key"},
+          "429": {"description": "PIN attempts rate-limited"},
+          "500": {"description": "Server/database failure; access must remain denied"}
+        },
+        "description": "The raw PIN is checked against a bcrypt hash and the card UID against its SHA-256 hash. The Pi must not grant access unless this endpoint returns granted=true."
+      }
+    },
+    "/api/access": {
+      "post": {
+        "summary": "Record a Pi-checked RFID/PIN attempt",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Access attempt stored"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "deviceKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "device_uid": "main-entrance-pi",
+                "method": "pin",
+                "result": "denied",
+                "reason": "wrong_pin"
+              }
+            }
+          }
+        },
+        "description": "Required method: rfid or pin; result: granted or denied. Optional reason (max 50 chars), user_id, card_id, snapshot_id (existing positive integer IDs or null). Pi performs access checking. No PINs or raw card UIDs are sent here."
+      },
+      "get": {
+        "summary": "Recent access attempts, newest first (aliases)",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "1",
+                    "device_uid": "main-entrance-pi",
+                    "created_at": "2026-10-03T06:00:00Z",
+                    "method": "pin",
+                    "result": "denied",
+                    "reason": "wrong_pin",
+                    "user_id": null,
+                    "user_name": null,
+                    "card_id": null,
+                    "snapshot_id": null
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_uid",
+            "in": "query",
+            "description": "Filter by registered device UID. Omit to query all devices (latest device for current KPI).",
+            "schema": {
+              "type": "string"
+            },
+            "example": "main-entrance-pi"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 50
+            },
+            "example": 50
+          }
+        ]
+      }
+    },
+    "/api/access-logs": {
+      "get": {
+        "summary": "Recent access attempts, newest first (aliases)",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "1",
+                    "device_uid": "main-entrance-pi",
+                    "created_at": "2026-10-03T06:00:00Z",
+                    "method": "pin",
+                    "result": "denied",
+                    "reason": "wrong_pin",
+                    "user_id": null,
+                    "user_name": null,
+                    "card_id": null,
+                    "snapshot_id": null
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_uid",
+            "in": "query",
+            "description": "Filter by registered device UID. Omit to query all devices (latest device for current KPI).",
+            "schema": {
+              "type": "string"
+            },
+            "example": "main-entrance-pi"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 50
+            },
+            "example": 50
+          }
+        ]
+      }
+    },
+    "/api/alerts": {
+      "get": {
+        "summary": "Recent alerts, newest first",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": 1,
+                    "type": "gas_presence",
+                    "message": "Gas detected",
+                    "created_at": "2026-10-03T06:00:00Z",
+                    "resolved_at": null,
+                    "status": "Active",
+                    "device_uid": "main-entrance-pi",
+                    "device_name": "Main entrance Raspberry Pi"
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_uid",
+            "in": "query",
+            "description": "Filter by registered device UID. Omit to query all devices (latest device for current KPI).",
+            "schema": {
+              "type": "string"
+            },
+            "example": "main-entrance-pi"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 50
+            },
+            "example": 50
+          }
+        ],
+        "description": "Types: high_temperature, high_humidity, gas_presence. Status is Active when resolved_at is null, otherwise Cleared."
+      }
+    },
+    "/api/snapshots": {
+      "post": {
+        "summary": "Upload a camera image",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "file_path": "/uploads/example.png"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Too large",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Image must be at most 5 MB"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "deviceKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "device_uid",
+                  "image"
+                ],
+                "properties": {
+                  "device_uid": {
+                    "type": "string",
+                    "example": "main-entrance-pi"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "example": "denied_access"
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG, PNG or WebP, max 5 MB"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/snapshots/latest": {
+      "get": {
+        "summary": "Latest snapshot metadata",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "file_path": "/uploads/example.png",
+                  "reason": "denied_access",
+                  "captured_at": "2026-10-03T06:00:00Z",
+                  "device_name": "Main entrance Raspberry Pi"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad input",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid request"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server/database failure; retry later",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Internal server error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No snapshot yet",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "No snapshots found"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_uid",
+            "in": "query",
+            "description": "Filter by registered device UID. Omit to query all devices (latest device for current KPI).",
+            "schema": {
+              "type": "string"
+            },
+            "example": "main-entrance-pi"
+          }
+        ]
+      }
+    },
+    "/uploads/{filename}": {
+      "get": {
+        "summary": "Read a snapshot image (login required)",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "example.png"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary JPEG, PNG or WebP image",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login required",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login required"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Image not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Endpoint not found"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

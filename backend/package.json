@@ -1,0 +1,23 @@
+{
+  "name": "smart-access-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "setup": "node scripts/setup.js",
+    "rotate-device-key": "node scripts/rotate-device-key.js",
+    "simulate": "node scripts/simulate.js",
+    "test": "node --test test/integration.test.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "chart.js": "^4.5.1",
+    "dotenv": "^17.0.0",
+    "ejs": "^6.0.1",
+    "express": "^5.1.0",
+    "jquery": "^4.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "pg": "^8.16.0"
+  }
+}

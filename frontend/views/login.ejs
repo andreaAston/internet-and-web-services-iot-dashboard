@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administrator Login | Smart Access Monitor</title>
+  <link rel="stylesheet" href="/css/login.css">
+  <script src="/vendor/jquery/jquery.min.js" defer></script>
+  <script src="/js/login.js" defer></script>
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <a class="brand" href="/login" aria-label="Smart Access Monitor home">
+      <span class="brand-mark" aria-hidden="true">⌂</span>
+      <span>Smart Access Monitor</span>
+    </a>
+    <section class="login-card" aria-labelledby="login-title">
+      <h1 id="login-title">Administrator Login</h1>
+      <p class="login-intro">Sign in to monitor your rooms.</p>
+      <form id="login-form" novalidate>
+        <label for="username">Username</label>
+        <input id="username" name="username" autocomplete="username" placeholder="Enter your username" required maxlength="50">
+
+        <label for="password">Password</label>
+        <div class="password-field">
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+          <button class="password-toggle" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+        </div>
+        <p class="form-message" id="login-message" role="status" aria-live="polite"></p>
+        <button class="primary-button sign-in" type="submit">Sign In</button>
+      </form>
+      <div class="login-location"><span aria-hidden="true">●</span> Main Entrance</div>
+    </section>
+    <p class="login-footer">Secure room monitoring</p>
+  </main>
+</body>
+</html>

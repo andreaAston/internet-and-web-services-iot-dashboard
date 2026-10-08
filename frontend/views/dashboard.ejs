@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= room %> | Smart Access Monitor</title>
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <script src="/vendor/jquery/jquery.min.js" defer></script>
+  <script src="/vendor/chart.js/chart.umd.js" defer></script>
+  <script src="/js/dashboard.js" defer></script>
+</head>
+<body class="dashboard-page">
+  <%- include('partials/header', { room, admin }) %>
+  <div class="dashboard-layout">
+    <%- include('partials/sidebar') %>
+    <main class="dashboard-main" id="main-content">
+      <section class="kpi-grid" aria-label="Current room readings">
+        <article class="kpi-card temperature-card"><p>Temperature</p><strong id="temperature-value">—</strong><span>Current reading</span></article>
+        <article class="kpi-card humidity-card"><p>Humidity</p><strong id="humidity-value">—</strong><span>Current reading</span></article>
+        <article class="kpi-card gas-card"><p>Gas Status</p><strong id="gas-value">—</strong><span>Digital gas sensor</span></article>
+        <article class="kpi-card fan-card"><p>Fan</p><strong id="fan-value">—</strong><span>Ventilation</span></article>
+      </section>
+      <div class="dashboard-grid">
+        <section class="panel access-panel" id="access-panel" aria-labelledby="access-title">
+          <div class="panel-heading"><div><p class="eyebrow">ENTRY HISTORY</p><h2 id="access-title">Recent Access Activity</h2></div><label class="filter-control">Result<select id="access-filter" aria-label="Filter access activity by result"><option value="all">All access</option><option value="granted">Granted</option><option value="denied">Denied</option></select></label></div>
+          <div class="table-scroll row-scroll access-scroll" id="access-scroll"><table><thead><tr><th>Time</th><th>Method</th><th>User</th><th>Result</th></tr></thead><tbody id="access-rows"><tr><td colspan="4" class="empty-cell">Loading access activity…</td></tr></tbody></table></div>
+          <p class="panel-message" id="access-message" aria-live="polite"></p>
+        </section>
+        <section class="panel snapshot-panel" id="camera-panel" aria-labelledby="snapshot-title">
+          <div class="panel-heading"><div><p class="eyebrow">CAMERA</p><h2 id="snapshot-title">Latest Security Snapshot</h2></div></div>
+          <div class="snapshot-frame" id="snapshot-frame"><div class="snapshot-empty"><span aria-hidden="true">▣</span><p>No camera snapshot available</p></div></div>
+          <div class="snapshot-meta"><span>Captured <strong id="snapshot-time">—</strong></span><span>Reason <strong id="snapshot-reason">—</strong></span></div>
+          <p class="panel-message" id="snapshot-message" aria-live="polite"></p>
+        </section>
+        <section class="panel history-panel" id="history-panel" aria-labelledby="history-title">
+          <div class="panel-heading"><div><p class="eyebrow">ENVIRONMENT</p><h2 id="history-title">Temperature &amp; Humidity History</h2></div>
+            <label class="range-label" for="history-range">Range</label><select id="history-range"><option value="1">Last Hour</option><option value="6">Last 6 Hours</option><option value="24">Last 24 Hours</option></select>
+          </div>
+          <div class="chart-wrap"><canvas id="history-chart" aria-label="Temperature and humidity history chart" role="img"></canvas></div>
+          <p class="panel-message" id="history-message" aria-live="polite"></p>
+        </section>
+        <section class="panel alerts-panel" id="alerts-panel" aria-labelledby="alerts-title">
+          <div class="panel-heading"><div><p class="eyebrow">NOTIFICATIONS</p><h2 id="alerts-title">Recent Alerts</h2></div><label class="filter-control">Type<select id="alert-filter" aria-label="Filter alerts by type"><option value="all">All alerts</option><option value="gas_presence">Gas</option><option value="high_humidity">Humidity</option><option value="high_temperature">Temperature</option></select></label></div>
+          <div class="table-scroll row-scroll alerts-scroll" id="alerts-scroll"><table><thead><tr><th>Time</th><th>Type</th><th>Message</th><th>Status</th></tr></thead><tbody id="alert-rows"><tr><td colspan="4" class="empty-cell">Loading alerts…</td></tr></tbody></table></div>
+          <p class="panel-message" id="alerts-message" aria-live="polite"></p>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

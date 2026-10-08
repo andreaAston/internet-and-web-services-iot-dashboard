@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Select Room | Smart Access Monitor</title>
+  <link rel="stylesheet" href="/css/rooms.css">
+  <script src="/vendor/jquery/jquery.min.js" defer></script>
+  <script src="/js/rooms.js" defer></script>
+</head>
+<body class="rooms-page">
+  <header class="rooms-topbar">
+    <a class="brand" href="/rooms"><span class="brand-mark" aria-hidden="true">⌂</span><span>Smart Access Monitor</span></a>
+    <div class="admin-menu"><span aria-hidden="true">♙</span> <%= admin.username %><a href="/logout">Log out</a></div>
+  </header>
+  <main class="rooms-main">
+    <div class="rooms-heading">
+      <p class="eyebrow">ROOM SELECTION</p>
+      <h1>Select Room</h1>
+      <p>Choose a registered room to monitor.</p>
+    </div>
+    <p class="room-list-message" id="room-message" role="status" aria-live="polite"></p>
+    <section class="room-grid" id="device-list" aria-label="Registered rooms"></section>
+  </main>
+</body>
+</html>

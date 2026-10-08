@@ -1,0 +1,9 @@
+# Already in your venv from the test scripts: RPi.GPIO, mfrc522, spidev,
+# adafruit-circuitpython-dht (brings adafruit-blinka).
+# New for this firmware: requests, python-dotenv.
+RPi.GPIO
+mfrc522
+spidev
+adafruit-circuitpython-dht
+requests
+python-dotenv

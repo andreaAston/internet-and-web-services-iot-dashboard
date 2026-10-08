@@ -1,0 +1,8 @@
+# secrets and runtime files - never commit these
+.env
+snapshots/
+offline_queue.db
+device.log
+__pycache__/
+*.pyc
+test_snapshot.jpg
