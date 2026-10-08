@@ -90,7 +90,7 @@ python main.py
 1. the admin username and password (once),
 2. the person's name,
 3. a card tap, which reads its card ID,
-4. the PIN typed twice on the keypad (`#` confirms, `*` clears).
+4. the PIN typed twice on the keypad (pause briefly after the digits to submit; `#` also submits, `*` clears).
 
 The card ID (hashed with SHA-256) and the PIN (hashed with bcrypt) are stored in the
 database. Press Enter at the name prompt to finish.
@@ -105,7 +105,7 @@ normal operation.
 |---|---|---|
 | Firmware starts | Ready | 2 short beeps |
 | Key pressed | Digit recorded | tiny tick |
-| First factor entered | Enter PIN then tap card, or tap card then enter PIN and press `#` | Key tick / card read tick |
+| First factor entered | Enter PIN then pause briefly and tap the card, or tap the card then enter the PIN and pause briefly (`#` also submits) | Key tick / card read tick |
 | Correct card and PIN | Door opens (90 degrees) | 2 medium beeps |
 | Invalid card/PIN pair | Access denied; photo taken | 1 long beep |
 | 3 failures | 30 s lockout | 5 beeps |

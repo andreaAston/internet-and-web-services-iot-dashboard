@@ -14,8 +14,9 @@ The program has TWO STEPS, at the bottom of this file in main():
       main(). From then on the firmware starts straight in normal operation.
 
   STEP 2 - NORMAL OPERATION
-        1. Enter the PIN and press #, then tap the card; or tap the card and then
-            enter the PIN and press #. The server verifies both factors together.
+        1. Enter the PIN and press # or pause briefly, then tap the card; or tap
+            the card and enter the PIN, then press # or pause briefly. The server
+            verifies both factors together.
         2. Both valid -> door (servo) opens to 90 degrees. Either invalid -> denied,
             photo taken. 3 failures = 30 s lockout.
       3. With the door open, enter the same person's PIN + # again -> door closes (0 degrees).
@@ -66,6 +67,7 @@ class Controller:
         self.user_id = None
         self.card_id = None
         self.pin = ""
+        self.pin_last_input_at = None
         self.fails = 0
         self.lockout_until = 0.0
         self.stop = threading.Event()
@@ -73,6 +75,7 @@ class Controller:
     def clear_session(self):
         self.card_uid = self.user_id = self.card_id = None
         self.pin = ""
+        self.pin_last_input_at = None
 
     def set_state(self, state):
         self.state = state
@@ -130,8 +133,10 @@ class Controller:
         if key.isdigit():
             if len(self.pin) < cfg.PIN_MAX_LEN:
                 self.pin += key
+                self.pin_last_input_at = time.monotonic()
         elif key == "*":
             self.pin = ""
+            self.pin_last_input_at = None
         elif key == "#":
             self.submit_pin()
             return
@@ -139,6 +144,7 @@ class Controller:
             self.state_since = time.time()    # typing keeps the PIN window open
 
     def submit_pin(self):
+        self.pin_last_input_at = None
         if self.state in (WAIT_PIN, WAIT_CARD) and len(self.pin) < cfg.PIN_MIN_LEN:
             log.info("PIN too short (%d digits)", len(self.pin))
             self.pin = ""
@@ -217,6 +223,7 @@ class Controller:
         log.info("Ready. Tap a card.")
         while not self.stop.is_set():
             now = time.time()
+            monotonic_now = time.monotonic()
             if self.state == LOCKED_OUT:
                 if now >= self.lockout_until:
                     self.fails = 0
@@ -224,6 +231,10 @@ class Controller:
                 else:
                     time.sleep(0.2)
                     continue
+            if (self.state in (WAIT_PIN, WAIT_CARD, OPEN) and self.pin_last_input_at is not None
+                    and len(self.pin) >= cfg.PIN_MIN_LEN
+                    and monotonic_now - self.pin_last_input_at >= cfg.PIN_SUBMIT_IDLE_S):
+                self.submit_pin()
             if self.state in (WAIT_PIN, WAIT_CARD) and now - self.state_since > cfg.PIN_TIMEOUT_S:
                 log.info("PIN timeout")
                 self.clear_session()
@@ -305,21 +316,28 @@ def wait_for_card(hw, timeout=30):
 
 
 def read_pin_on_keypad(hw, prompt):
-    print(prompt + "  (digits, # to confirm, * to clear)")
+    print(prompt + "  (digits, pause to submit, # also submits, * to clear)")
     pin = ""
+    last_digit_at = None
     while True:
         key = hw.keypad.get_key()
         if key:
             hw.buzzer.tick()
             if key.isdigit() and len(pin) < cfg.PIN_MAX_LEN:
                 pin += key
+                last_digit_at = time.monotonic()
                 print("*" * len(pin), end="\r", flush=True)
             elif key == "*":
                 pin = ""
+                last_digit_at = None
                 print(" " * 12, end="\r", flush=True)
             elif key == "#":
                 print()
                 return pin
+        if (len(pin) >= cfg.PIN_MIN_LEN and last_digit_at is not None
+                and time.monotonic() - last_digit_at >= cfg.PIN_SUBMIT_IDLE_S):
+            print()
+            return pin
         time.sleep(0.03)
 
 

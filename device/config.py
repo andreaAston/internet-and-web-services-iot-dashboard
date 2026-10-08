@@ -92,6 +92,7 @@ AUTO_RELOCK_S = 0             # 0 = off. Door closes only when the PIN is entere
 PIN_MIN_LEN = 4
 PIN_MAX_LEN = 8
 PIN_TIMEOUT_S = 15            # time allowed to type the PIN after a card scan
+PIN_SUBMIT_IDLE_S = 1.5       # submit after this pause once the minimum PIN length is reached
 MAX_FAILS = 3                 # wrong card/PIN attempts before lockout
 LOCKOUT_S = 30
 CARD_COOLDOWN_S = 1.0         # ignore the same card for this long after a scan
