@@ -232,6 +232,10 @@ body {
   color:#72859c;
   font-size:11px
 }
+.sensor-status.unavailable {
+  color:#b4232d;
+  font-weight:650
+}
 .gas-card {
   background:#f1fbf7
 }

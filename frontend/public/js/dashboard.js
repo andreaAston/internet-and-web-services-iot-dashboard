@@ -49,8 +49,14 @@ $(function () {
 
   function loadCurrent() {
     $.getJSON('/api/dashboard/current', { device_uid: deviceUid }).done(function (data) {
-      $('#temperature-value').text(Number.isFinite(data.temperature) ? `${Number(data.temperature).toFixed(1)} °C` : 'Data unavailable');
-      $('#humidity-value').text(Number.isFinite(data.humidity) ? `${Number(data.humidity).toFixed(0)}%` : 'Data unavailable');
+      const temperatureAvailable = Number.isFinite(data.temperature);
+      const humidityAvailable = Number.isFinite(data.humidity);
+      const dhtAvailable = temperatureAvailable && humidityAvailable;
+      const dhtStatus = dhtAvailable ? 'DHT22 reading OK' : 'DHT22 unavailable';
+      $('#temperature-value').text(temperatureAvailable ? `${Number(data.temperature).toFixed(1)} °C` : 'Data unavailable');
+      $('#humidity-value').text(humidityAvailable ? `${Number(data.humidity).toFixed(0)}%` : 'Data unavailable');
+      $('#temperature-sensor-status, #humidity-sensor-status')
+        .text(dhtStatus).toggleClass('unavailable', !dhtAvailable);
       const gas = data.gas_status;
       $('#gas-value').text(gas === 'safe' ? 'SAFE' : gas === 'detected' ? 'DETECTED' : 'Data unavailable');
       $('.gas-card').toggleClass('safe', gas === 'safe').toggleClass('detected', gas === 'detected');
@@ -63,6 +69,8 @@ $(function () {
       $('#device-indicator').removeClass('online offline');
       $('.gas-card').removeClass('safe detected');
       $('#temperature-value, #humidity-value, #gas-value, #fan-value').text('Data unavailable');
+      $('#temperature-sensor-status, #humidity-sensor-status')
+        .text('Sensor status unknown').addClass('unavailable');
       if (xhr.status === 404) {
         $('#device-message').text('No device data is available yet.');
         $('#device-status').text('No data');
