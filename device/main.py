@@ -279,7 +279,7 @@ class SensorLoop(threading.Thread):
                         hum_high = True
                     elif h <= cfg.FAN_ON_HUMIDITY - cfg.FAN_HYST_HUMIDITY:
                         hum_high = False
-                alarm = gas or temp_high or hum_high
+                alarm = gas is True or temp_high or hum_high
                 self.hw.relay.set(alarm)
                 # Keep unavailable DHT readings as None; the API stores them as SQL NULL.
                 payload = {"temperature": t, "humidity": h, "gas_present": gas,

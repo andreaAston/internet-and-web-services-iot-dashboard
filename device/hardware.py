@@ -211,11 +211,15 @@ class GasSensor:
 
     def present(self):
         votes = 0
-        for _ in range(3):                    # 3 quick samples, majority wins
-            level = GPIO.input(self._pin)
-            if (level == GPIO.LOW) == cfg.MQ3_ACTIVE_LOW:
-                votes += 1
-            time.sleep(0.02)
+        try:
+            for _ in range(3):                # 3 quick samples, majority wins
+                level = GPIO.input(self._pin)
+                if (level == GPIO.LOW) == cfg.MQ3_ACTIVE_LOW:
+                    votes += 1
+                time.sleep(0.02)
+        except Exception as exc:
+            log.warning("Gas sensor read failed: %s", exc)
+            return None
         return votes >= 2
 
 

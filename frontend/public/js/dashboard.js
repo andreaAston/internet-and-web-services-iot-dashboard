@@ -58,7 +58,10 @@ $(function () {
       $('#temperature-sensor-status, #humidity-sensor-status')
         .text(dhtStatus).toggleClass('unavailable', !dhtAvailable);
       const gas = data.gas_status;
+      const gasAvailable = gas === 'safe' || gas === 'detected';
       $('#gas-value').text(gas === 'safe' ? 'SAFE' : gas === 'detected' ? 'DETECTED' : 'Data unavailable');
+      $('#gas-sensor-status').text(gasAvailable ? 'Gas sensor reading OK' : 'Gas sensor unavailable')
+        .toggleClass('unavailable', !gasAvailable);
       $('.gas-card').toggleClass('safe', gas === 'safe').toggleClass('detected', gas === 'detected');
       $('#fan-value').text(data.fan_status ? data.fan_status.toUpperCase() : 'Data unavailable');
       const online = data.device_online === true;
@@ -71,6 +74,7 @@ $(function () {
       $('#temperature-value, #humidity-value, #gas-value, #fan-value').text('Data unavailable');
       $('#temperature-sensor-status, #humidity-sensor-status')
         .text('Sensor status unknown').addClass('unavailable');
+        $('#gas-sensor-status').text('Sensor status unknown').addClass('unavailable');
       if (xhr.status === 404) {
         $('#device-message').text('No device data is available yet.');
         $('#device-status').text('No data');
