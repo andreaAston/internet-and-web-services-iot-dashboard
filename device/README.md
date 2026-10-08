@@ -1,8 +1,8 @@
 # Raspberry Pi firmware - smart access + environment monitor
 
-This folder is the program that runs on the Raspberry Pi. Copy the whole folder to
-the Pi (for example `~/smart-access/device/`) and run `python main.py`. It is the
-firmware itself, not a set of test scripts.
+This folder is the program that runs on the Raspberry Pi. Copy it to the Pi (for
+example `~/Iot_firmware/`) and run `python main.py`. It is the firmware itself,
+not a set of test scripts.
 
 ## What it does
 
@@ -60,13 +60,27 @@ sudo usermod -aG video $USER             # then log out and back in
 fswebcam -d /dev/video0 -r 1280x720 --no-banner check.jpg    # optional: proves the camera works
 ```
 
-`.env` holds three lines:
+For Render, set `.env` on the Pi to the public web-service URL, not the database URL:
 
 ```
-SERVER_URL=http://<laptop-ip>:3000
+SERVER_URL=https://<your-render-service>.onrender.com
 DEVICE_API_KEY=<plain key whose SHA-256 hash is in devices.api_key_hash>
 DEVICE_UID=main-entrance-pi
 ```
+
+The device API key must exactly match the plain key registered for this `DEVICE_UID`; PostgreSQL stores its SHA-256 hash. Keep the key private. Never put the PostgreSQL URL or database password in the Pi's `.env`.
+
+For a local backend instead, use its reachable LAN URL, such as `http://<laptop-ip>:3000`. The Pi and computer must be able to reach each other over the same LAN or a configured VPN.
+
+### Rotate the device key
+
+If the key is unknown or exposed, choose a new random key of at least 32 characters. Set it as `DEVICE_API_KEY` in `backend/.env`, keep `DEVICE_UID` set to the Pi's UID, then run this from `backend` to update the hash in PostgreSQL:
+
+```bash
+npm run rotate-device-key
+```
+
+Set the exact same new key in the Pi's `device/.env`. Restart the firmware afterward. The admin password and device API key are different credentials.
 
 ## Backend requirement
 
@@ -94,6 +108,8 @@ python main.py
 
 The card ID (hashed with SHA-256) and the PIN (hashed with bcrypt) are stored in the
 database. Press Enter at the name prompt to finish.
+
+The admin credentials must exist in the same database used by the Render service. Use the dashboard admin username and password created by `npm run setup`; a local-only admin account is not automatically copied to Render. If the first Pi login times out while Render is waking, open the Render `/login` page in a browser, wait for it to load, then retry enrollment. The Pi request timeout is four seconds.
 
 **When everyone is registered, open `main.py`, find `run_enrolment(hw, api)` in `main()`
 and comment it out** (put a `#` in front). From then on the firmware starts directly in
@@ -131,8 +147,15 @@ Set `SNAPSHOT_ON_GRANTED = True` in `config.py` to photograph successful entries
   `offline_queue.db` and sent in order when the server returns.
 - **Camera unplugged:** photo skipped, rest keeps working.
 - **DHT unplugged:** temperature and humidity are left out of the telemetry, and the gas
-  state, fan and door logic continue. The DHT runs in its own process, so a crash there
-  cannot stop the door.
+  state, fan and door logic continue. The dashboard labels both readings `DHT22 unavailable`;
+  they return to normal when valid readings resume. The DHT runs in its own process, so a
+  crash there cannot stop the door.
+- **MQ-3 GPIO read error:** the firmware logs `Gas sensor read failed`, sends a null gas
+  value, and continues the telemetry loop. The dashboard labels the gas sensor unavailable.
+  An unplugged digital output can float and look like a valid HIGH or LOW, so this software
+  error handling cannot reliably detect every physical disconnection; guaranteed detection
+  needs supervised wiring or a separate fault signal. An unknown gas value alone does not
+  switch on the fan.
 - **Bad data:** the backend validates every payload and the Pi logs rejections.
 
 ## Settings you may want to change (`config.py`)
@@ -142,3 +165,42 @@ when it should be off), `MQ3_ACTIVE_LOW`, `DHT_TYPE` (DHT22 or DHT11), `FAN_ON_T
 `FAN_ON_HUMIDITY`, `MAX_FAILS`, `LOCKOUT_S`, `AUTO_RELOCK_S`, `SNAPSHOT_ON_GRANTED`.
 
 The log is also written to `device.log`.
+
+## Copy updated firmware from Windows
+
+With SSH enabled and the Pi reachable on the same LAN, run this in PowerShell from the
+project root. Replace the address with the Pi's address from `hostname -I`:
+
+```powershell
+scp .\device\main.py .\device\hardware.py pi@<PI_LAN_IP>:~/Iot_firmware/
+```
+
+Copy the private config separately only when it needs updating; do not commit it or
+share its contents:
+
+```powershell
+scp .\device\.env pi@<PI_LAN_IP>:~/Iot_firmware/.env
+```
+
+If the computer and Pi cannot reach each other over the network, transfer the files by
+USB instead. On the Pi, stop the old firmware with Ctrl+C and restart it:
+
+```bash
+cd ~/Iot_firmware
+source ~/rfid-venv/bin/activate
+python main.py
+```
+
+## Fault demonstration
+
+With the firmware sending data, remove the DHT22 connection and check the Pi log and
+dashboard. The Pi should continue sending telemetry with `temperature: None` and
+`humidity: None`; both dashboard cards should say **DHT22 unavailable** while the device
+can remain online. Reconnect the sensor and valid values/status should return.
+
+On an MQ-3 GPIO read exception, the Pi should log `Gas sensor read failed`, keep sending
+telemetry, and the dashboard should say **Gas sensor unavailable**. A physically floating
+MQ-3 output may not raise a GPIO exception, so this test does not guarantee detection of
+every broken wire. Gas status `null` alone does not turn on the fan. The dashboard checks
+data every five seconds; the device is marked offline only after two minutes without any
+telemetry.
