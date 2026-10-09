@@ -160,7 +160,7 @@ $(function () {
       });
       const labelsForChart = buckets.map(function (bucket) {
         const date = new Date(bucket.timestamp);
-        return hours === 24
+        return bucketMinutes === 2
           ? date.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit' })
           : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       });
@@ -171,8 +171,8 @@ $(function () {
       const data = {
         labels: labelsForChart,
         datasets: [
-          { label: 'Temperature (°C)', data: buckets.map(bucket => bucket.reading?.temperature ?? null), borderColor: '#f04a53', backgroundColor: 'rgba(240, 74, 83, 0.75)', yAxisID: 'temperature', borderWidth: 1, borderRadius: 2, categoryPercentage: .8, barPercentage: .85 },
-          { label: 'Humidity (%)', data: buckets.map(bucket => bucket.reading?.humidity ?? null), borderColor: '#087cf0', backgroundColor: 'rgba(8, 124, 240, 0.7)', yAxisID: 'humidity', borderWidth: 1, borderRadius: 2, categoryPercentage: .8, barPercentage: .85 },
+          { label: 'denied', data: buckets.map(bucket => bucket.reading?.denied ?? null), borderColor: '#f04a53', backgroundColor: 'rgba(240, 74, 83, 0.75)', yAxisID: 'denied', borderWidth: 1, borderRadius: 2, categoryPercentage: .8, barPercentage: .85 },
+          { label: 'granted', data: buckets.map(bucket => bucket.reading?.granted ?? null), borderColor: '#087cf0', backgroundColor: 'rgba(8, 124, 240, 0.7)', yAxisID: 'granted', borderWidth: 1, borderRadius: 2, categoryPercentage: .8, barPercentage: .85 },
         ],
       };
       if (chart) {
@@ -184,8 +184,8 @@ $(function () {
           options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
             plugins: { legend: { position: 'top' } },
             scales: {
-              temperature: { type: 'linear', position: 'left', title: { display: true, text: 'Temperature (°C)' } },
-              humidity: { type: 'linear', position: 'right', min: 0, max: 100, title: { display: true, text: 'Humidity (%)' }, grid: { drawOnChartArea: false } },
+              denied: { type: 'linear', position: 'left', title: { display: true, text: 'denied' } },
+              granted: { type: 'linear', position: 'right', min: 0, max: 100, title: { display: true, text: 'granted' }, grid: { drawOnChartArea: false } },
             } },
         });
       }
